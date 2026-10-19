@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "models": [
+    {
+      "name": "ch_PP-OCRv4_det_infer",
+      "filename": "ch_PP-OCRv4_det_infer.onnx",
+      "type": "detection",
+      "source_url": "https://github.com/RapidAI/RapidOCR/releases/download/v1.1.0/ch_PP-OCRv4_det_infer.onnx",
+      "sha256": "426fbb1fb9993309a4753ba1448b3b0d2d6313fbcf90234a9d7010ddbba2c244",
+      "size_bytes": 4768393,
+      "description": "PP-OCRv4 text detection ONNX model"
+    },
+    {
+      "name": "ch_ppocr_mobile_v2.0_cls_infer",
+      "filename": "ch_ppocr_mobile_v2.0_cls_infer.onnx",
+      "type": "classification",
+      "source_url": "https://github.com/RapidAI/RapidOCR/releases/download/v1.1.0/ch_ppocr_mobile_v2.0_cls_infer.onnx",
+      "sha256": "5bb37d6e64ae54366fa9d020a5957cf68c17b8f9cda3cbbd5f13b1f14890c917",
+      "size_bytes": 1583095,
+      "description": "Direction classification 0/180 degrees ONNX model"
+    },
+    {
+      "name": "ch_PP-OCRv4_rec_infer",
+      "filename": "ch_PP-OCRv4_rec_infer.onnx",
+      "type": "recognition",
+      "source_url": "https://github.com/RapidAI/RapidOCR/releases/download/v1.1.0/ch_PP-OCRv4_rec_infer.onnx",
+      "sha256": "9b64c01bfb78f4a1329bf39dbba39dd0f81d113cfa0ae12ab8e470876ffb63fe",
+      "size_bytes": 12423788,
+      "description": "PP-OCRv4 multilingual and Latin text recognition ONNX model"
+    }
+  ]
+}

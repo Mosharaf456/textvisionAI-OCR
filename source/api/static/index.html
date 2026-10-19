@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextVision AI — Intelligent text recognition and extraction.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="brand-logo">⚡</div>
+                <div class="brand-text">
+                    <h1>TextVision AI <span class="badge badge-cpu">Intel i5 AVX2</span></h1>
+                    <p class="brand-subtitle">Intelligent text recognition and extraction.</p>
+                </div>
+            </div>
+            <div class="nav-status">
+                <span id="statusIndicator" class="status-dot"></span>
+                <span id="statusText">Connecting...</span>
+                <span id="latencyBadge" class="latency-pill">-- ms</span>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs-container">
+            <button class="tab-btn active" data-tab="tab-scanner">
+                <span class="tab-icon">📄</span> 1. Document Scanner
+            </button>
+            <button class="tab-btn" data-tab="tab-pdf">
+                <span class="tab-icon">📑</span> 2. PDF & Image Reader
+            </button>
+            <button class="tab-btn" data-tab="tab-structured">
+                <span class="tab-icon">🧾</span> 3. Invoices & ID Cards
+            </button>
+            <button class="tab-btn" data-tab="tab-alpr">
+                <span class="tab-icon">🚗</span> 4. CCTV License Plate (ALPR)
+            </button>
+        </nav>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+
+            <!-- ================= TAB 1: DOCUMENT SCANNER ================= -->
+            <section id="tab-scanner" class="tab-content active">
+                <div class="workflow-header">
+                    <h2>Scanning Printed Documents into Editable Text</h2>
+                    <p>Deskewing, Sauvola adaptive binarization, Recursive XY-Cut layout analysis, and Searchable PDF generation.</p>
+                </div>
+
+                <div class="grid-2col">
+                    <!-- Left: Upload & Preview -->
+                    <div class="card panel-input">
+                        <div class="card-header">
+                            <h3>Input Document</h3>
+                            <button class="btn btn-secondary btn-sm" id="btnLoadDocSample">
+                                ⚡ Load Sample Document
+                            </button>
+                        </div>
+
+                        <div class="drop-zone" id="dropDoc">
+                            <input type="file" id="fileDoc" accept="image/*,.pdf" class="file-input">
+                            <div class="drop-prompt">
+                                <span class="upload-icon">📤</span>
+                                <p><strong>Drag & drop document image</strong> or <span>browse</span></p>
+                                <span class="file-support">PNG, JPG, TIFF, WebP</span>
+                            </div>
+                        </div>
+
+                        <div class="controls-row">
+                            <label class="toggle-control">
+                                <input type="checkbox" id="chkDeskew" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Auto-Deskew</span>
+                            </label>
+
+                            <label class="toggle-control">
+                                <input type="checkbox" id="chkShowBoxes" checked>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Show Bounding Boxes</span>
+                            </label>
+                        </div>
+
+                        <div class="canvas-wrapper" id="canvasWrapperDoc">
+                            <canvas id="canvasDoc"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Right: Results -->
+                    <div class="card panel-output">
+                        <div class="card-header">
+                            <div class="output-tabs">
+                                <button class="btn-subtab active" data-subtab="sub-md">Markdown</button>
+                                <button class="btn-subtab" data-subtab="sub-txt">Plain Text</button>
+                                <button class="btn-subtab" data-subtab="sub-json">Boxes JSON</button>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary btn-sm" id="btnExportPdf" disabled>
+                                    ⬇️ Download Searchable PDF
+                                </button>
+                                <button class="btn btn-secondary btn-sm" id="btnCopyText">
+                                    📋 Copy
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="stats-bar" id="statsDoc" style="display: none;">
+                            <span class="stat-item">Lines: <strong id="statLines">0</strong></span>
+                            <span class="stat-item">Confidence: <strong id="statConfidence">0%</strong></span>
+                            <span class="stat-item">Skew: <strong id="statSkew">0°</strong></span>
+                            <span class="stat-item">Time: <strong id="statTime">0 ms</strong></span>
+                        </div>
+
+                        <div class="subtab-content active" id="sub-md">
+                            <pre class="code-output" id="outMarkdown">Upload or load a sample document to see recognized formatted Markdown...</pre>
+                        </div>
+                        <div class="subtab-content" id="sub-txt">
+                            <pre class="code-output" id="outPlainText">Upload or load a sample document to see plain text...</pre>
+                        </div>
+                        <div class="subtab-content" id="sub-json">
+                            <pre class="code-output" id="outJson">Bounding box coordinates and confidence levels...</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TAB 2: PDF & IMAGE READER ================= -->
+            <section id="tab-pdf" class="tab-content">
+                <div class="workflow-header">
+                    <h2>Reading Text from Multi-Format Images & Hybrid PDFs</h2>
+                    <p>Digital vector text stream extraction fast-path (<15ms) + multi-threaded raster OCR fallback.</p>
+                </div>
+
+                <div class="grid-2col">
+                    <div class="card panel-input">
+                        <div class="card-header">
+                            <h3>PDF or Multi-Image Ingestion</h3>
+                            <button class="btn btn-secondary btn-sm" id="btnLoadPdfSample">
+                                ⚡ Load Sample Image
+                            </button>
+                        </div>
+
+                        <div class="drop-zone" id="dropPdf">
+                            <input type="file" id="filePdf" accept=".pdf,image/*" class="file-input">
+                            <div class="drop-prompt">
+                                <span class="upload-icon">📚</span>
+                                <p><strong>Upload PDF or high-res image</strong></p>
+                                <span class="file-support">PDF (digital/scanned), PNG, JPG, TIFF, WebP</span>
+                            </div>
+                        </div>
+
+                        <div class="controls-row">
+                            <label class="toggle-control">
+                                <input type="checkbox" id="chkForceOcr">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Force Raster OCR (Bypass Fast-Path)</span>
+                            </label>
+                        </div>
+
+                        <div class="page-list-container" id="pdfPageList">
+                            <div class="empty-state">No pages processed yet.</div>
+                        </div>
+                    </div>
+
+                    <div class="card panel-output">
+                        <div class="card-header">
+                            <h3>Full Extracted Document Text</h3>
+                            <button class="btn btn-secondary btn-sm" id="btnCopyPdfText">📋 Copy Full Text</button>
+                        </div>
+                        <pre class="code-output" id="outPdfText">Document text will appear here...</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TAB 3: INVOICES & ID CARDS ================= -->
+            <section id="tab-structured" class="tab-content">
+                <div class="workflow-header">
+                    <h2>Structured Document Understanding: Invoices & ID Cards</h2>
+                    <p>Spatial key-value extraction, line-item table parsing, arithmetic consistency validation, and MRZ passport parsing.</p>
+                </div>
+
+                <div class="structured-mode-selector">
+                    <button class="btn-mode active" id="modeInvoice">🧾 Invoice Mode</button>
+                    <button class="btn-mode" id="modeID">🪪 ID Card / Passport Mode</button>
+                </div>
+
+                <div class="grid-2col">
+                    <div class="card panel-input">
+                        <div class="card-header">
+                            <h3 id="structuredInputTitle">Invoice Image</h3>
+                            <button class="btn btn-secondary btn-sm" id="btnLoadStructuredSample">
+                                ⚡ Load Sample Invoice
+                            </button>
+                        </div>
+
+                        <div class="drop-zone" id="dropStructured">
+                            <input type="file" id="fileStructured" accept="image/*" class="file-input">
+                            <div class="drop-prompt">
+                                <span class="upload-icon">📑</span>
+                                <p id="structuredDropPrompt"><strong>Upload invoice image</strong></p>
+                                <span class="file-support">PNG, JPG, TIFF</span>
+                            </div>
+                        </div>
+
+                        <div class="canvas-wrapper">
+                            <canvas id="canvasStructured"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card panel-output">
+                        <div class="card-header">
+                            <h3>Extracted Entity Schema</h3>
+                            <span id="mathBadge" class="badge badge-success" style="display: none;">✓ Math Balanced</span>
+                        </div>
+
+                        <!-- Invoice view container -->
+                        <div id="viewInvoiceContainer">
+                            <div class="entity-cards-grid" id="invoiceMetaCards">
+                                <div class="entity-card">
+                                    <div class="label">Invoice No</div>
+                                    <div class="value" id="invNo">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">Date</div>
+                                    <div class="value" id="invDate">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">Vendor</div>
+                                    <div class="value" id="invVendor">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">Customer</div>
+                                    <div class="value" id="invCustomer">--</div>
+                                </div>
+                            </div>
+
+                            <h4 class="subhead">Line Items Table</h4>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="tableLineItems">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th class="text-right">Qty</th>
+                                            <th class="text-right">Price</th>
+                                            <th class="text-right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="4" class="text-center">No line items extracted yet</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="totals-summary" id="invoiceTotalsSummary">
+                                <div class="total-row"><span>Subtotal:</span> <strong id="invSubtotal">--</strong></div>
+                                <div class="total-row"><span>Tax:</span> <strong id="invTax">--</strong></div>
+                                <div class="total-row grand-total"><span>Grand Total:</span> <strong id="invTotal">--</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- ID Card view container -->
+                        <div id="viewIdCardContainer" style="display: none;">
+                            <div class="entity-cards-grid">
+                                <div class="entity-card">
+                                    <div class="label">Card Type</div>
+                                    <div class="value" id="idType">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">Document / NID No</div>
+                                    <div class="value" id="idNumber">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">Full Name</div>
+                                    <div class="value" id="idName">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">Date of Birth</div>
+                                    <div class="value" id="idDob">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">Blood Group</div>
+                                    <div class="value" id="idBlood">--</div>
+                                </div>
+                                <div class="entity-card">
+                                    <div class="label">MRZ Checksum</div>
+                                    <div class="value" id="idMrz">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="json-toggle-box">
+                            <details>
+                                <summary>View Validated Pydantic JSON</summary>
+                                <pre class="code-output json-output" id="outStructuredJson">{}</pre>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TAB 4: CCTV LICENSE PLATE (ALPR) ================= -->
+            <section id="tab-alpr" class="tab-content">
+                <div class="workflow-header">
+                    <h2>Vehicle License Plate Recognition in CCTV Surveillance Systems</h2>
+                    <p>Contrast CLAHE normalization, Bangladesh BRTA & International syntax regex matching, and character ambiguity resolution.</p>
+                </div>
+
+                <div class="grid-2col">
+                    <div class="card panel-input">
+                        <div class="card-header">
+                            <h3>CCTV Video Frame</h3>
+                            <button class="btn btn-secondary btn-sm" id="btnLoadAlprSample">
+                                ⚡ Load Sample CCTV Frame
+                            </button>
+                        </div>
+
+                        <div class="drop-zone" id="dropAlpr">
+                            <input type="file" id="fileAlpr" accept="image/*" class="file-input">
+                            <div class="drop-prompt">
+                                <span class="upload-icon">📹</span>
+                                <p><strong>Upload CCTV frame image</strong></p>
+                                <span class="file-support">PNG, JPG, BMP</span>
+                            </div>
+                        </div>
+
+                        <div class="canvas-wrapper">
+                            <canvas id="canvasAlpr"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card panel-output">
+                        <div class="card-header">
+                            <h3>Detected License Plates</h3>
+                            <span class="badge badge-info" id="alprCountBadge">0 Plates</span>
+                        </div>
+
+                        <div class="plate-results-list" id="alprResultsList">
+                            <div class="empty-state">Upload or load a CCTV surveillance frame to detect license plates.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Spinner Modal -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner-box">
+            <div class="spinner"></div>
+            <p id="loadingMessage">Running CPU OCR inference...</p>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
